@@ -7,7 +7,13 @@ body {
   background-color: #eee;
 }
 
+main {
+  height: 100%;
+}
+
 .picker {
+  position: absolute;
+
   height: 100%;
   width: 20em;
 
@@ -28,12 +34,12 @@ body {
   flex: 0 1 auto;
   align-self: auto;
 
-  height: 8em;
-  width: 8em;
+  height: 80px;
+  width: 80px;
 }
 
 .circle {
-  border-radius: 5em;
+  border-radius: 40px;
   background-color: #ee9988;
 }
 
@@ -47,17 +53,27 @@ body {
   position: absolute;
   z-index: 9;
 
-  height: 8em;
-  width: 8em;
+  height: 80px;
+  width: 80px;
 
   cursor: move;
 }
 
 .draggable-circle {
-  border-radius: 5em;
+  border-radius: 40px;
   background-color: #ee9988;
 }
 
 .draggable-square {
   background-color: #88dd86;
+}
+
+.scheme {
+  height: 100%;
+  width: 100%;
+}
+
+canvas {
+  height: 100%;
+  width: 100%;
 }
