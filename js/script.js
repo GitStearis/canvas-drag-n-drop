@@ -13,81 +13,156 @@ var figures = {
   }
 };
 
-var circle = document.getElementById(figures.circle.id);
-var square = document.getElementById(figures.square.id);
-var canvas = document.getElementById("canvas");
-
-var context = initializeCanvas(canvas);
+var canvasFigures = [];
+var isDragging = false;
 
 var releaseX = 0;
 var releaseY = 0;
 
-dragElement(circle);
-dragElement(square);
+var circle = document.getElementById(figures.circle.id);
+var square = document.getElementById(figures.square.id);
+var canvas = document.getElementById("canvas");
+
+var offsetX = canvas.getBoundingClientRect().left;
+var offsetY = canvas.getBoundingClientRect().top;
+
+var context = null;
+
+initializePicker();
+initializeCanvas(canvas);
+
+function initializePicker() {
+  dragElement(circle);
+  dragElement(square);
+};
 
 function initializeCanvas(canvas) {
   canvas.width = window.innerWidth;
   canvas.height = window.innerHeight;
 
   if (canvas.getContext) {
-    return canvas.getContext('2d');
+    context = canvas.getContext("2d");
+  }
+
+  setCanvasMouseInteractions(canvas);
+};
+
+function setCanvasMouseInteractions(canvas) {
+  canvas.onmousedown = grabFigure;
+  canvas.onmouseup = releaseFigure;
+  canvas.onmousemove = dragFigure;
+
+  var mouseX = 0;
+  var mouseY = 0;
+
+  var dragStartX = 0;
+  var dragStartY = 0;
+
+  function grabFigure(event) {
+    if (!isDragging) {
+      event.preventDefault();
+      event.stopPropagation();
+  
+      mouseX = event.clientX - offsetX;
+      mouseY = event.clientY - offsetY;
+  
+      isDragging = false;
+      canvasFigures.forEach(figure => {
+        switch(figure.type) {
+          case figures.circle: {
+            if (checkCircle(figure, mouseX, mouseY)) {
+              isDragging = true;
+              figure.isDragging = true;
+            }
+          } break;
+          case figures.square: {
+            if (checkSquare(figure, mouseX, mouseY)) {
+              isDragging = true;
+              figure.isDragging = true;
+            }
+          } break;
+          default: break;
+        };
+      });
+  
+      dragStartX = mouseX;
+      dragStartY = mouseY;
+    }
+    
+    function checkCircle(circle, x, y) {
+      const dx = circle.x - x - magicalDropNumber;
+      const dy = circle.y - y;
+      return (dx * dx + dy * dy < figures.circle.radius * figures.circle.radius);
+    };
+
+    function checkSquare(square, x, y) {
+      return (x + magicalDropNumber > square.x - figures.square.width / 2
+              && x < square.x + figures.square.width / 2
+              && y > square.y - figures.square.width / 2
+              && y < square.y + figures.square.width / 2);
+    };
+  };
+
+  function releaseFigure(event) {
+    if (isDragging) {
+      event.preventDefault();
+      event.stopPropagation();
+
+      releaseX = event.clientX - offsetX;
+      releaseY = event.clientY - offsetY;
+
+      isDragging = false;
+      canvasFigures.forEach(figure => {
+        figure.isDragging = false;
+      });
+    }
+  };
+
+  function dragFigure(event) {
+    if (isDragging) {
+      event.preventDefault();
+      event.stopPropagation();
+
+      mouseX = event.clientX - offsetX;
+      mouseY = event.clientY - offsetY;
+
+      const distanceX = mouseX - dragStartX;
+      const distanceY = mouseY - dragStartY;
+
+      canvasFigures.forEach(figure => {
+        if (figure.isDragging) {
+          figure.x += distanceX;
+          figure.y += distanceY;
+        }
+      });
+
+      redrawCanvas();
+
+      dragStartX = mouseX;
+      dragStartY = mouseY;
+    }
+  };
+
+  function redrawCanvas() {
+    context.clearRect(0, 0, canvas.width, canvas.height); 
+    canvasFigures.forEach(figure => drawFigure(figure, false));
   }
 };
 
-function drawFigure(type) {
-  switch(type) {
-    case figures.circle.id: {
-      drawCircle();
-    } break;
-    case figures.square.id: {
-      drawSquare();
-    } break;
-    default: break;
-  };
-
-  function drawCircle() {
-    if (context) {
-      if (releaseX && releaseY) {
-        context.beginPath();
-        context.arc(releaseX, releaseY, figures.circle.radius, 0, 2 * Math.PI, false);
-        context.fillStyle = figures.circle.color;
-        context.fill();
-        context.closePath();
-      }
-    }
-  };
-
-  function drawSquare() {
-    if (context) {
-      if (releaseX && releaseY) {
-        const width = figures.square.width;
-        const topX = releaseX - width / 2;
-        const topY = releaseY - width / 2;
-
-        context.beginPath();
-        context.rect(topX, topY, width, width);
-        context.fillStyle = figures.square.color;
-        context.fill();
-        context.closePath();
-      }
-    }
-  };
-};
-
-function dragElement(figure) {
+function dragElement(element) {
   let shiftX = 0;
   let shiftY = 0;
   let mouseX = 0;
   let mouseY = 0;
 
-  const figureHomePosition = {
-    x: figure.offsetLeft,
-    y: figure.offsetTop
+  const elementHomePosition = {
+    x: element.offsetLeft,
+    y: element.offsetTop
   };
 
-  figure.onmousedown = dragMouseDown;
+  element.onmousedown = startDrag;
 
-  function dragMouseDown(event = window.event) {
+  function startDrag(event = window.event) {
     event.preventDefault();
     mouseX = event.clientX;
     mouseY = event.clientY;
@@ -102,21 +177,94 @@ function dragElement(figure) {
     shiftY = mouseY - event.clientY;
     mouseX = event.clientX;
     mouseY = event.clientY;
-    figure.style.top = (figure.offsetTop - shiftY) + "px";
-    figure.style.left = (figure.offsetLeft - shiftX) + "px";
+    element.style.top = (element.offsetTop - shiftY) + "px";
+    element.style.left = (element.offsetLeft - shiftX) + "px";
   };
 
   function stopElementDrag() {
     document.onmouseup = null;
     document.onmousemove = null;
 
-    releaseX = magicalDropNumber + figure.offsetLeft + figure.offsetWidth / 2;
-    releaseY = figure.offsetTop + figure.offsetHeight / 2;
+    releaseX = element.offsetLeft + element.offsetWidth / 2 + magicalDropNumber;
+    releaseY = element.offsetTop + element.offsetHeight / 2;
 
-    figure.style.left = figureHomePosition.x + "px";
-    figure.style.top = figureHomePosition.y + "px";
+    element.style.left = elementHomePosition.x + "px";
+    element.style.top = elementHomePosition.y + "px";
     
-    drawFigure(figure.id);
+    drawFigure(figureByElementId(element.id), true);
   };
+
+  function figureByElementId(id) {
+    switch(id) {
+      case figures.circle.id: {
+        return {
+          x: releaseX,
+          y: releaseY,
+          type: figures.circle
+        }
+      }
+      case figures.square.id: {
+        return {
+          x: releaseX,
+          y: releaseY,
+          type: figures.square
+        }
+      }
+      default: {
+        return {};
+      };
+    }
+  }
+};
+
+function drawFigure(figure, isCreated) {
+  switch(figure.type) {
+    case figures.circle: {
+      drawCircle(figure.x, figure.y);
+      if (isCreated) {
+        registerFigure(figure.x, figure.y, figures.circle);
+      }
+    } break;
+    case figures.square: {
+      drawSquare(figure.x, figure.y);
+      if (isCreated) {
+        registerFigure(figure.x, figure.y, figures.square);
+      }
+    } break;
+    default: break;
+  };
+
+  function drawCircle(x, y) {
+    if (context) {
+      context.beginPath();
+        context.arc(x, y, figures.circle.radius, 0, 2 * Math.PI, false);
+        context.fillStyle = figures.circle.color;
+        context.fill();
+        context.closePath();
+    }
+  };
+
+  function drawSquare(x, y) {
+    if (context) {
+      const width = figures.square.width;
+      const topX = x - width / 2;
+      const topY = y - width / 2;
+
+      context.beginPath();
+      context.rect(topX, topY, width, width);
+      context.fillStyle = figures.square.color;
+      context.fill();
+      context.closePath();
+    }
+  };
+
+  function registerFigure(x, y, type) {
+    canvasFigures.push({
+      x,
+      y,
+      type,
+      isDragging: false
+    });
+  }
 };
 
