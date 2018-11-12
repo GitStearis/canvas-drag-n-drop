@@ -29,7 +29,7 @@ main {
   align-items: center;    
 }
 
-.circle, .square {
+.ham, .cheese {
   order: 0;
   flex: 0 1 auto;
   align-self: auto;
@@ -38,18 +38,18 @@ main {
   width: 80px;
 }
 
-.circle {
+.ham {
   border-radius: 40px;
   background-color: #ee9988;
 }
 
-.square {
+.cheese {
   margin-top: 5em;
 
-  background-color: #88dd86;
+  background-color: #e4ce51;
 }
 
-.draggable-circle, .draggable-square {
+.draggable-ham, .draggable-cheese {
   position: absolute;
   z-index: 9;
 
@@ -59,13 +59,13 @@ main {
   cursor: move;
 }
 
-.draggable-circle {
+.draggable-ham {
   border-radius: 40px;
   background-color: #ee9988;
 }
 
-.draggable-square {
-  background-color: #88dd86;
+.draggable-cheese {
+  background-color: #e4ce51;
 }
 
 .scheme {
