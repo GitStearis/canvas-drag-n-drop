@@ -89,11 +89,6 @@ function setCanvasMouseInteractions(canvas) {
           default: break;
         };
       }
-      canvasFigures.forEach(figure => {
-
-      });
-  
-      
     }
     
     function checkCircle(circle, x, y) {
