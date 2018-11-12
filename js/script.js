@@ -65,28 +65,35 @@ function setCanvasMouseInteractions(canvas) {
   
       mouseX = event.clientX - offsetX;
       mouseY = event.clientY - offsetY;
+
+      dragStartX = mouseX;
+      dragStartY = mouseY;
   
       isDragging = false;
-      canvasFigures.forEach(figure => {
-        switch(figure.type) {
+      for (let i = canvasFigures.length - 1; i >= 0; i--) {
+        switch(canvasFigures[i].type) {
           case figures.circle: {
-            if (checkCircle(figure, mouseX, mouseY)) {
+            if (checkCircle(canvasFigures[i], mouseX, mouseY)) {
               isDragging = true;
-              figure.isDragging = true;
+              canvasFigures[i].isDragging = true;
+              return ;
             }
           } break;
           case figures.square: {
-            if (checkSquare(figure, mouseX, mouseY)) {
+            if (checkSquare(canvasFigures[i], mouseX, mouseY)) {
               isDragging = true;
-              figure.isDragging = true;
+              canvasFigures[i].isDragging = true;
+              return ;
             }
           } break;
           default: break;
         };
+      }
+      canvasFigures.forEach(figure => {
+
       });
   
-      dragStartX = mouseX;
-      dragStartY = mouseY;
+      
     }
     
     function checkCircle(circle, x, y) {
